@@ -9,7 +9,7 @@
     ],
     "routes": [
         {
-            "src": "/(.*)",
+            "src": "/admin/login",
             "dest": "app.js"
         }
     ]
