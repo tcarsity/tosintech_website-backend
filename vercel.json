@@ -2,14 +2,14 @@
     "version": 2,
     "builds": [
         {
-            "src": "app.js",
+            "src": "/",
             "use": "@vercel/node",
             "config": { "includeFiles": ["dist/**"] }
         }
     ],
     "routes": [
         {
-            "src": "/admin/login",
+            "src": "/",
             "dest": "app.js"
         }
     ]
