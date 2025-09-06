@@ -13,6 +13,7 @@ return array(
     'App\\Http\\Controllers\\admin\\ProjectController' => $baseDir . '/app/Http/Controllers/admin/ProjectController.php',
     'App\\Http\\Controllers\\admin\\TempImageController' => $baseDir . '/app/Http/Controllers/admin/TempImageController.php',
     'App\\Http\\Controllers\\front\\ContactController' => $baseDir . '/app/Http/Controllers/front/ContactController.php',
+    'App\\Http\\Controllers\\front\\ProjectController' => $baseDir . '/app/Http/Controllers/front/ProjectController.php',
     'App\\Mail\\ContactEmail' => $baseDir . '/app/Mail/ContactEmail.php',
     'App\\Models\\Project' => $baseDir . '/app/Models/Project.php',
     'App\\Models\\TempImage' => $baseDir . '/app/Models/TempImage.php',

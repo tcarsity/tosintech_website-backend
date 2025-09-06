@@ -538,6 +538,7 @@ class ComposerStaticInit626b9e7ddd47fb7eff9aaa53cce0c9ad
         'App\\Http\\Controllers\\admin\\ProjectController' => __DIR__ . '/../..' . '/app/Http/Controllers/admin/ProjectController.php',
         'App\\Http\\Controllers\\admin\\TempImageController' => __DIR__ . '/../..' . '/app/Http/Controllers/admin/TempImageController.php',
         'App\\Http\\Controllers\\front\\ContactController' => __DIR__ . '/../..' . '/app/Http/Controllers/front/ContactController.php',
+        'App\\Http\\Controllers\\front\\ProjectController' => __DIR__ . '/../..' . '/app/Http/Controllers/front/ProjectController.php',
         'App\\Mail\\ContactEmail' => __DIR__ . '/../..' . '/app/Mail/ContactEmail.php',
         'App\\Models\\Project' => __DIR__ . '/../..' . '/app/Models/Project.php',
         'App\\Models\\TempImage' => __DIR__ . '/../..' . '/app/Models/TempImage.php',
