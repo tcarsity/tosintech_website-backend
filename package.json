@@ -16,5 +16,9 @@
     },
     "dependencies": {
         "nodemailer": "^7.0.6"
+    },
+    "engines": {
+        "node": "22.17.1",
+        "npm": ">=11.60.0"
     }
 }
