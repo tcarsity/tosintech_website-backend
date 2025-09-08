@@ -53,6 +53,11 @@ return [
             'transport' => 'sendgrid',
         ],
 
+        'log' => [
+            'transport' => 'log',
+            'channel' => env('MAIL_LOG_CHANNEL'), // defaults to the "stack" channel
+        ],
+
         'ses' => [
             'transport' => 'ses',
         ],
