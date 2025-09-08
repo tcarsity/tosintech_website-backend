@@ -18,6 +18,6 @@
     <p>{{ $mailData['message'] }}</p>
 
     <p>Thanks.</p>
-    
+
 </body>
 </html>
