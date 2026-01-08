@@ -1,30 +1,35 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    git unzip libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql
+# Install system deps
+RUN apk add --no-cache \
+    bash \
+    postgresql-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    git
 
-# Install Composer
+# PHP extensions
+RUN docker-php-ext-install pdo pdo_pgsql zip
+
+# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copy application
+# Copy app
 COPY . .
 
-# Install Laravel dependencies
+# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Fix permissions
-RUN chown -R www-data:www-data /var/www \
-    && chmod -R 755 storage bootstrap/cache
+# Permissions
+RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Copy entrypoint
-COPY docker/entrypoint.sh /entrypoint.sh
+# Entrypoint
+COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8000
+EXPOSE 9000
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
