@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Tosin Olarewaju',
                 'password' => Hash::make('tosintech91'),
-
+                'role' => 'admin'
             ]
         );
     }
