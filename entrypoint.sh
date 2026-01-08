@@ -1,18 +1,12 @@
 #!/usr/bin/env sh
-
-
 set -e
 
-echo "Starting Laravel container..."
+echo "Running migrations (if possible)..."
+php artisan migrate --force || echo "Migration skipped"
 
-# Ensure permissions
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+echo "Running seeders (if possible)..."
+php artisan db:seed --force || echo "Seeding skipped"
 
-# Run migrations safely
-php artisan migrate --force || true
+echo "Starting Laravel HTTP server..."
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
 
-# Optional: seed only once (comment out if you want)
-php artisan db:seed --force || true
-
-# Start PHP-FPM
-exec php-fpm

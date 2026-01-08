@@ -1,36 +1,26 @@
-FROM php:8.2-fpm-alpine
 
+FROM php:8.2-cli-alpine
 
-# Install system deps
 RUN apk add --no-cache \
     bash \
-    postgresql-dev \
-    libzip-dev \
-    zip \
+    git \
     unzip \
-    git
+    libzip-dev \
+    postgresql-dev
 
-# PHP extensions
 RUN docker-php-ext-install pdo pdo_pgsql zip
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copy app
 COPY . .
 
-# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
+RUN chmod +x /var/www/entrypoint.sh
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+EXPOSE 10000
 
-EXPOSE 9000
-
-ENTRYPOINT ["/entrypoint.sh"]
+CMD ["/var/www/entrypoint.sh"]
