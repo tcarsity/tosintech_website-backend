@@ -1,5 +1,6 @@
 #!/usr/bin/env sh
 
+
 set -e
 
 echo "Starting Laravel container..."
