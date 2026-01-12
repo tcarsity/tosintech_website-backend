@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f57345abd0a93a4e88b0ed23ae7660a0",
+    "content-hash": "948ea715efe2f655bc3d9e455ce1f67a",
     "packages": [
         {
             "name": "brick/math",
@@ -3479,63 +3479,6 @@
                 "source": "https://github.com/ramsey/uuid/tree/4.8.1"
             },
             "time": "2025-06-01T06:28:46+00:00"
-        },
-        {
-            "name": "resend/resend-php",
-            "version": "v0.11.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/resend/resend-php.git",
-                "reference": "31ec02fc2d16b3badc10612289a3325afe68147c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/resend/resend-php/zipball/31ec02fc2d16b3badc10612289a3325afe68147c",
-                "reference": "31ec02fc2d16b3badc10612289a3325afe68147c",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^7.5",
-                "php": "^8.1.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.13",
-                "mockery/mockery": "^1.6",
-                "pestphp/pest": "^2.0"
-            },
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/Resend.php"
-                ],
-                "psr-4": {
-                    "Resend\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Resend and contributors",
-                    "homepage": "https://github.com/resend/resend-php/contributors"
-                }
-            ],
-            "description": "Resend PHP library.",
-            "homepage": "https://resend.com/",
-            "keywords": [
-                "api",
-                "client",
-                "php",
-                "resend",
-                "sdk"
-            ],
-            "support": {
-                "issues": "https://github.com/resend/resend-php/issues",
-                "source": "https://github.com/resend/resend-php/tree/v0.11.0"
-            },
-            "time": "2024-02-01T18:06:15+00:00"
         },
         {
             "name": "s-ichikawa/laravel-sendgrid-driver",

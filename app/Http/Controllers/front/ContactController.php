@@ -5,7 +5,7 @@ namespace App\Http\Controllers\front;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use App\Services\ResendMailService;
+use Illuminate\Support\Facades\Mail;
 
 class ContactController extends Controller
 {
@@ -26,25 +26,21 @@ class ContactController extends Controller
         }
 
         // Build email body
-        $html = "
-            <h3>New Contact Message</h3>
-            <p><strong>Name:</strong> {$request->name}</p>
-            <p><strong>Email:</strong> {$request->email}</p>
-            <p><strong>Subject:</strong> {$request->subject}</p>
-            <p><strong>Message:</strong></p>
-            <p>{$request->message}</p>
-        ";
-
-        // Send via Resend API
-        ResendMailService::send(
-            'tosinoluwaseun10@gmail.com',
-            'Portfolio Contact Form',
-            $html
+        Mail::html (
+             "<p><strong>Name:</strong> {$request->name}</p>
+             <p><strong>Email:</strong> {$request->email}</p>
+             <p><strong>Subject:</strong> {$request->subject}</p>
+             <p>{$request->message}</p>",
+            function ($message) {
+                $message
+                    ->to('tosinoluwaseun10@gmail.com')
+                    ->subject('New Contact Message');
+            }
         );
 
         return response()->json([
             'status' => true,
-            'message' => 'Thanks for contacting me. I will get back to you shortly.'
+            'message' => 'Thanks for contacting us.'
         ]);
     }
 }
