@@ -214,15 +214,15 @@ class ProjectController extends Controller
         public function destroy($id){
             $project =  Project::find($id);
 
-            if($project == null){
+            if(!$project){
                     return response()->json([
                     'status' => 404,
                     'message' => 'Project not found'
                 ], 404);
             }
 
-                SupabaseStorageService::delete("projects/large/$oldImage");
-                SupabaseStorageService::delete("projects/small/$oldImage");
+                SupabaseStorageService::delete("projects/large");
+                SupabaseStorageService::delete("projects/small");
 
                 $project->delete();
 
