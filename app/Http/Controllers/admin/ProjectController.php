@@ -4,12 +4,14 @@ namespace App\Http\Controllers\admin;
 
 use App\Models\TempImage;
 use App\Models\Project;
+use App\Services\SupabaseStorageService;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+
 
 class ProjectController extends Controller
 {
@@ -27,7 +29,7 @@ class ProjectController extends Controller
 
     // This method will insert project in db
     public function store(Request $request){
-        
+
         $validator = Validator::make($request->all(),[
             'title' => 'required',
             'content' => 'required'
@@ -48,41 +50,48 @@ class ProjectController extends Controller
         $project->save();
 
 
-        if($request->imageId > 0){
-           
+        if ($request->imageId > 0) {
+
             $tempImage = TempImage::find($request->imageId);
-            if($tempImage != null){
-                $extArray = explode('.', $tempImage->name);
-                $ext = last($extArray);
 
-                $fileName = strtotime('now').$project->id.'.'.$ext;
+            if ($tempImage) {
 
+                $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+                $fileName = time() . '_' . $project->id . '.' . $ext;
 
-                // create small thumbnail here
-                $sourcePath = public_path('uploads/temp/'.$tempImage->name);
-                $destPath = public_path('uploads/projects/small/'.$fileName);
+                $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+
+                // SMALL
+                $smallPath = storage_path('app/tmp_small_' . $fileName);
                 $manager = new ImageManager(Driver::class);
-                $image = $manager->read($sourcePath); 
-                $image->coverDown(1108, 600);
-                $image->save($destPath);
+                $image = $manager->read($sourcePath);
+                $image->coverDown(1108, 600)->save($smallPath);
 
-                 // create large thumbnail here
-                $desPath = public_path('uploads/projects/large/'.$fileName);
-                $manager = new ImageManager(Driver::class);
-                $image = $manager->read($sourcePath); 
-                $image->scaleDown(1200);
-                $image->save($desPath);
+                SupabaseStorageService::upload(
+                    "projects/small/$fileName",
+                    $smallPath,
+                    mime_content_type($smallPath)
+                );
+
+
+                // LARGE
+                $largePath = storage_path('app/tmp_large_' . $fileName);
+                $image = $manager->read($sourcePath);
+                $image->scaleDown(1200)->save($largePath);
+
+                SupabaseStorageService::upload(
+                    "projects/large/$fileName",
+                    $largePath,
+                    mime_content_type($largePath)
+                );
+
+                // cleanup temp files
+                @unlink($smallPath);
+                @unlink($largePath);
 
                 $project->image = $fileName;
                 $project->save();
-
-
-                // if($oldImage != ''){
-                //     File::delete(public_path('uploads/services/large/'.$oldImage));
-                //     File::delete(public_path('uploads/services/small/'.$oldImage));
-                // }
             }
-
         }
 
 
@@ -114,7 +123,7 @@ class ProjectController extends Controller
 
         $project =  Project::find($id);
 
-        if($project == null){
+        if(!$project){
              return response()->json([
                 'status' => 404,
                 'message' => 'Project not found'
@@ -134,7 +143,7 @@ class ProjectController extends Controller
             ], 401);
         }
 
-        
+
         $project->title = $request->title;
         $project->content = $request->content;
         $project->site = $request->site;
@@ -142,48 +151,64 @@ class ProjectController extends Controller
         $project->save();
 
 
-        if($request->imageId > 0){
-           $oldImage = $project->image;
+       if ($request->imageId > 0) {
+
+            $oldImage = $project->image;
             $tempImage = TempImage::find($request->imageId);
-            if($tempImage != null){
-                $extArray = explode('.', $tempImage->name);
-                $ext = last($extArray);
 
-                $fileName = strtotime('now').$project->id.'.'.$ext;
+        if ($tempImage) {
 
+            $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+            $fileName = time() . '_' . $project->id . '.' . $ext;
 
-                // create small thumbnail here
-                $sourcePath = public_path('uploads/temp/'.$tempImage->name);
-                $desPath = public_path('uploads/projects/small/'.$fileName);
-                $manager = new ImageManager(Driver::class);
-                $image = $manager->read($sourcePath); 
-                $image->coverDown(640, 420);
-                $image->save($desPath);
+            $sourcePath = public_path('uploads/temp/' . $tempImage->name);
 
-                 // create large thumbnail here
-                $desPath = public_path('uploads/projects/large/'.$fileName);
-                $manager = new ImageManager(Driver::class);
-                $image = $manager->read($sourcePath); 
-                $image->scaleDown(1200);
-                $image->save($desPath);
+            $manager = new ImageManager(new Driver());
 
-                $project->image = $fileName;
-                $project->save();
+            /** SMALL IMAGE */
+            $smallTmp = storage_path("app/tmp_small_$fileName");
+            $image = $manager->read($sourcePath);
+            $image->coverDown(640, 420)->save($smallTmp);
+
+            SupabaseStorageService::upload(
+                "projects/small/$fileName",
+                $smallTmp,
+                mime_content_type($smallTmp)
+            );
+
+            /** LARGE IMAGE */
+            $largeTmp = storage_path("app/tmp_large_$fileName");
+            $image = $manager->read($sourcePath);
+            $image->scaleDown(1200)->save($largeTmp);
+
+            SupabaseStorageService::upload(
+                "projects/large/$fileName",
+                $largeTmp,
+                mime_content_type($largeTmp)
+            );
+
+            // cleanup temp files
+            @unlink($smallTmp);
+            @unlink($largeTmp);
+
+            // save new image
+            $project->image = $fileName;
+            $project->save();
+
+            // delete old images from Supabase
+            if ($oldImage) {
+                SupabaseStorageService::delete("projects/small/$oldImage");
+                SupabaseStorageService::delete("projects/large/$oldImage");
             }
-
-            if($oldImage != ''){
-                File::delete(public_path('uploads/projects/large/'.$oldImage));
-                File::delete(public_path('uploads/projects/small/'.$oldImage));
-            }
-
+        }
     }
 
-                return response()->json([
-                'status' => 200,
-                'message' => 'Project updated successfully.'
-            ], 200);
+            return response()->json([
+            'status' => 200,
+            'message' => 'Project updated successfully.'
+        ], 200);
 
-   
+
 }
 
         public function destroy($id){
@@ -196,8 +221,8 @@ class ProjectController extends Controller
                 ], 404);
             }
 
-                File::delete(public_path('uploads/projects/large/'.$project->image));
-                File::delete(public_path('uploads/projects/small/'.$project->image));
+                SupabaseStorageService::delete("projects/large/$oldImage");
+                SupabaseStorageService::delete("projects/small/$oldImage");
 
                 $project->delete();
 
