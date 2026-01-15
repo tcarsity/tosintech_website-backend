@@ -28,77 +28,88 @@ class ProjectController extends Controller
 
 
     // This method will insert project in db
-    public function store(Request $request){
-
-        $validator = Validator::make($request->all(),[
-            'title' => 'required',
-            'content' => 'required'
+    public function store(Request $request)
+    {
+        // 1️⃣ Validate main fields
+        $validator = Validator::make($request->all(), [
+            'title'   => 'required',
+            'content' => 'required',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
                 'status' => 401,
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 401);
         }
 
+        // 2️⃣ Create project first (same as your logic)
         $project = new Project();
-        $project->title = $request->title;
+        $project->title   = $request->title;
         $project->content = $request->content;
-        $project->site = $request->site;
-        $project->status = $request->status;
-        $project->save();
+        $project->site    = $request->site;
+        $project->status  = $request->status;
+        $project->save(); // IMPORTANT: must exist before image name
 
-
-        if ($request->imageId > 0) {
+        // 3️⃣ Handle image ONLY if imageId exists
+        if ($request->filled('imageId') && $request->imageId > 0) {
 
             $tempImage = TempImage::find($request->imageId);
 
             if ($tempImage) {
 
+                // filename
                 $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
                 $fileName = time() . '_' . $project->id . '.' . $ext;
 
+                // source temp image
                 $sourcePath = public_path('uploads/temp/' . $tempImage->name);
 
-                // SMALL
-                $smallPath = storage_path('app/tmp_small_' . $fileName);
-                $manager = new ImageManager(Driver::class);
-                $image = $manager->read($sourcePath);
-                $image->coverDown(1108, 600)->save($smallPath);
+                if (file_exists($sourcePath)) {
 
-                SupabaseStorageService::upload(
-                    "projects/small/$fileName",
-                    $smallPath,
-                    mime_content_type($smallPath)
-                );
+                    $manager = new ImageManager(new Driver());
 
+                    /**
+                     * SMALL IMAGE
+                     */
+                    $smallTmpPath = storage_path('app/tmp_small_' . $fileName);
+                    $image = $manager->read($sourcePath);
+                    $image->coverDown(1108, 600)->save($smallTmpPath);
 
-                // LARGE
-                $largePath = storage_path('app/tmp_large_' . $fileName);
-                $image = $manager->read($sourcePath);
-                $image->scaleDown(1200)->save($largePath);
+                    SupabaseStorageService::upload(
+                        "projects/small/{$fileName}",
+                        $smallTmpPath,
+                        mime_content_type($smallTmpPath)
+                    );
 
-                SupabaseStorageService::upload(
-                    "projects/large/$fileName",
-                    $largePath,
-                    mime_content_type($largePath)
-                );
+                    /**
+                     * LARGE IMAGE
+                     */
+                    $largeTmpPath = storage_path('app/tmp_large_' . $fileName);
+                    $image = $manager->read($sourcePath);
+                    $image->scaleDown(1200)->save($largeTmpPath);
 
-                // cleanup temp files
-                @unlink($smallPath);
-                @unlink($largePath);
+                    SupabaseStorageService::upload(
+                        "projects/large/{$fileName}",
+                        $largeTmpPath,
+                        mime_content_type($largeTmpPath)
+                    );
 
-                $project->image = $fileName;
-                $project->save();
+                    // cleanup local temp files
+                    @unlink($smallTmpPath);
+                    @unlink($largeTmpPath);
+
+                    // 4️⃣ Save image name to project (THIS WAS THE PROBLEM)
+                    $project->image = $fileName;
+                    $project->save();
+                }
             }
         }
 
-
-         return response()->json([
-                'status' => 200,
-                'message' => 'Project added successfully.'
-            ], 200);
+        return response()->json([
+            'status'  => 200,
+            'message' => 'Project added successfully.',
+        ], 200);
     }
 
 

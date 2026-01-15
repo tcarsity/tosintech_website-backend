@@ -37,7 +37,7 @@ class SupabaseStorageService
         Http::withHeaders(self::headers())->delete($url);
     }
 
-    public static function publicUrl(string $path): string
+    public static function getPublicUrl(string $path): string
     {
         return rtrim(config('services.supabase.url'), '/') .
             '/storage/v1/object/public/' .
