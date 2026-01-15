@@ -130,117 +130,116 @@ class ProjectController extends Controller
             ], 200);
     }
 
-    public function update($id, Request $request){
 
-        $project =  Project::find($id);
+    public function update($id, Request $request)
+    {
+        $project = Project::find($id);
 
-        if(!$project){
-             return response()->json([
+        if (!$project) {
+            return response()->json([
                 'status' => 404,
                 'message' => 'Project not found'
             ], 404);
         }
 
-
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'title' => 'required',
             'content' => 'required'
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
-                'status' => 401,
+                'status' => false,
                 'errors' => $validator->errors()
-            ], 401);
+            ], 422);
         }
 
-
+        // update fields
         $project->title = $request->title;
         $project->content = $request->content;
         $project->site = $request->site;
         $project->status = $request->status;
         $project->save();
 
-
-       if ($request->imageId > 0) {
+        // image replacement
+        if ($request->filled('imageId') && $request->imageId > 0) {
 
             $oldImage = $project->image;
             $tempImage = TempImage::find($request->imageId);
 
-        if ($tempImage) {
+            if ($tempImage) {
 
-            $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
-            $fileName = time() . '_' . $project->id . '.' . $ext;
+                $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+                $fileName = time() . '_' . $project->id . '.' . $ext;
+                $sourcePath = public_path('uploads/temp/' . $tempImage->name);
 
-            $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+                $manager = new ImageManager(Driver::class);
 
-            $manager = new ImageManager(new Driver());
+                /** SMALL IMAGE */
+                $smallTmp = storage_path("app/tmp_small_$fileName");
+                $image = $manager->read($sourcePath);
+                $image->coverDown(640, 420)->save($smallTmp);
 
-            /** SMALL IMAGE */
-            $smallTmp = storage_path("app/tmp_small_$fileName");
-            $image = $manager->read($sourcePath);
-            $image->coverDown(640, 420)->save($smallTmp);
+                SupabaseStorageService::upload(
+                    "projects/small/$fileName",
+                    $smallTmp,
+                    mime_content_type($smallTmp)
+                );
 
-            SupabaseStorageService::upload(
-                "projects/small/$fileName",
-                $smallTmp,
-                mime_content_type($smallTmp)
-            );
+                /** LARGE IMAGE */
+                $largeTmp = storage_path("app/tmp_large_$fileName");
+                $image = $manager->read($sourcePath);
+                $image->scaleDown(1200)->save($largeTmp);
 
-            /** LARGE IMAGE */
-            $largeTmp = storage_path("app/tmp_large_$fileName");
-            $image = $manager->read($sourcePath);
-            $image->scaleDown(1200)->save($largeTmp);
 
-            SupabaseStorageService::upload(
-                "projects/large/$fileName",
-                $largeTmp,
-                mime_content_type($largeTmp)
-            );
+                SupabaseStorageService::upload(
+                    "projects/large/$fileName",
+                    $largeTmp,
+                    mime_content_type($largeTmp)
+                );
 
-            // cleanup temp files
-            @unlink($smallTmp);
-            @unlink($largeTmp);
+                // cleanup local temp
+                @unlink($smallTmp);
+                @unlink($largeTmp);
 
-            // save new image
-            $project->image = $fileName;
-            $project->save();
+                // update db image
+                $project->image = $fileName;
+                $project->save();
 
-            // delete old images from Supabase
-            if ($oldImage) {
-                SupabaseStorageService::delete("projects/small/$oldImage");
-                SupabaseStorageService::delete("projects/large/$oldImage");
+                // delete old images AFTER successful update
+                if ($oldImage) {
+                    SupabaseStorageService::delete("projects/small/$oldImage");
+                    SupabaseStorageService::delete("projects/large/$oldImage");
+                }
             }
         }
-    }
 
-            return response()->json([
-            'status' => 200,
+        return response()->json([
+            'status' => true,
             'message' => 'Project updated successfully.'
         ], 200);
+    }
 
 
-}
+    public function destroy($id){
+        $project =  Project::find($id);
 
-        public function destroy($id){
-            $project =  Project::find($id);
-
-            if(!$project){
-                    return response()->json([
-                    'status' => 404,
-                    'message' => 'Project not found'
-                ], 404);
-            }
-
-                SupabaseStorageService::delete("projects/large");
-                SupabaseStorageService::delete("projects/small");
-
-                $project->delete();
-
+        if(!$project){
                 return response()->json([
-                    'status' => 200,
-                    'message' => 'Project deleted successfully.'
-                ], 200);
+                'status' => 404,
+                'message' => 'Project not found'
+            ], 404);
         }
+
+            SupabaseStorageService::delete("projects/large");
+            SupabaseStorageService::delete("projects/small");
+
+            $project->delete();
+
+            return response()->json([
+                'status' => 200,
+                'message' => 'Project deleted successfully.'
+            ], 200);
+    }
 
 }
