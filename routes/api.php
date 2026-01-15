@@ -33,7 +33,7 @@ Route::group(['middleware' => ['auth:sanctum']], function(){
    Route::get('dashboard',[DashboardController::class, 'index']);
    Route::get('logout', [AuthController::class, 'logout']);
 
-   Route::post('temp-images', [TempImageController::class, 'store']);
+   Route::post('temp-images', [TempImageController::class, 'tempImage']);
 
    //Project Routes
    Route::post('projects',[ProjectController::class, 'store']);

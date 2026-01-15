@@ -12,7 +12,7 @@ use Intervention\Image\Drivers\Imagick\Driver;
 
 class TempImageController extends Controller
 {
-    public function store(Request $request)
+    public function tempImage(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'image' => 'required|mimes:png,jpg,jpeg,gif,webp|max:5120',
