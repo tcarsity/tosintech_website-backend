@@ -6,53 +6,65 @@ use App\Models\TempImage;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Drivers\Imagick\Driver;
 
 class TempImageController extends Controller
 {
-    //
-    public function store(Request $request){
-
-        $validator = Validator::make($request->all(),[
-            'image' => 'required|mimes:png,jpg,jpeg,gif'
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|mimes:png,jpg,jpeg,gif,webp|max:5120',
         ]);
 
-        if($validator->fails()){
+        if ($validator->fails()) {
             return response()->json([
-                'status' => 404,
-                'errors' => $validator->errors('image')
-            ], 404);
+                'status' => false,
+                'errors' => $validator->errors()->first('image'),
+            ], 422);
         }
 
+         $image = $request->file('image');
 
-        $image = $request->image;
+        $imageName = Str::uuid().'.'.$image->getClientOriginalExtension();
 
-        $ext = $image->getClientOriginalExtension();
-        $imageName = strtotime('now').'.'.$ext;
+        $basePath = public_path('uploads/temp');
+        $thumbPath = public_path('uploads/temp/thumb');
 
-        //Save data in temp images table
-        $model = new TempImage();
-        $model->name = $imageName;
-        $model->save();
+        if (!file_exists($basePath)) {
+            mkdir($basePath, 0755, true);
+        }
 
-        // Save image in upload/temp directory
+        if (!file_exists($thumbPath)) {
+            mkdir($thumbPath, 0755, true);
+        }
 
-        $image->move(public_path('uploads/temp'), $imageName);
+        // Save DB record
+        $tempImage = TempImage::create([
+            'name' => $imageName,
+        ]);
 
-        // Create small thmbnail here
-        $sourcePath = public_path('uploads/temp/'.$imageName);
-        $destPath = public_path('uploads/temp/thumb/'.$imageName);
-        $manager = new ImageManager(Driver::class);
-        $image = $manager->read($sourcePath);
-        $image->coverDown(300, 300);
-        $image->save($destPath);
+        // Move original
+        $image->move($basePath, $imageName);
 
+         // Create thumbnail
+        try {
+            $manager = new ImageManager(new Driver());
+            $img = $manager->read($basePath.'/'.$imageName);
+            $img->coverDown(300, 300);
+            $img->save($thumbPath.'/'.$imageName);
+        } catch (\Throwable $e) {
             return response()->json([
-                'status' => 200,
-                'data' => $model,
-                'message' => 'Image uploaded successfully.'
-            ], 200);
-        
+                'status' => false,
+                'message' => 'Image processing failed',
+            ], 500);
+        }
+
+        return response()->json([
+            'status' => true,
+            'data' => $tempImage,
+            'message' => 'Image uploaded successfully.',
+        ], 200);
     }
 }
