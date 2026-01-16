@@ -44,14 +44,13 @@ class ProjectController extends Controller
         }
 
         // 2️⃣ Create project first (same as your logic)
-        $project = new Project();
-        $project->title   = $request->title;
-        $project->content = $request->content;
-        $project->site    = $request->site;
-        $project->status  = $request->status;
-        $project->save(); // IMPORTANT: must exist before image name
+        $project = Project::create([
+            'title'  => $request->title,
+            'content' => $request->content,
+            'site'  => $request->site,
+            'status'  => $request->status,
+        ]);
 
-        // 3️⃣ Handle image ONLY if imageId exists
         if ($request->filled('imageId') && $request->imageId > 0) {
 
             $tempImage = TempImage::find($request->imageId);
@@ -67,41 +66,19 @@ class ProjectController extends Controller
 
                 if (file_exists($sourcePath)) {
 
-                    $manager = new ImageManager(new Driver());
-
-                    /**
-                     * SMALL IMAGE
-                     */
-                    $smallTmpPath = storage_path('app/tmp_small_' . $fileName);
-                    $image = $manager->read($sourcePath);
-                    $image->coverDown(1108, 600)->save($smallTmpPath);
-
                     SupabaseStorageService::upload(
                         "projects/small/{$fileName}",
-                        $smallTmpPath,
-                        mime_content_type($smallTmpPath)
+                        $largeTmpPath,
+                        mime_content_type($sourcePath)
                     );
-
-                    /**
-                     * LARGE IMAGE
-                     */
-                    $largeTmpPath = storage_path('app/tmp_large_' . $fileName);
-                    $image = $manager->read($sourcePath);
-                    $image->scaleDown(1200)->save($largeTmpPath);
 
                     SupabaseStorageService::upload(
                         "projects/large/{$fileName}",
                         $largeTmpPath,
-                        mime_content_type($largeTmpPath)
+                        mime_content_type($sourcePath)
                     );
 
-                    // cleanup local temp files
-                    @unlink($smallTmpPath);
-                    @unlink($largeTmpPath);
-
-                    // 4️⃣ Save image name to project (THIS WAS THE PROBLEM)
-                    $project->image = $fileName;
-                    $project->save();
+                    $project->update(['image' =>  $fileName]);
                 }
             }
         }
@@ -155,65 +132,53 @@ class ProjectController extends Controller
         }
 
         // update fields
-        $project->title = $request->title;
-        $project->content = $request->content;
-        $project->site = $request->site;
-        $project->status = $request->status;
-        $project->save();
+        $project->update([
+            'title'  => $request->title,
+            'content' => $request->content,
+            'site'  => $request->site,
+            'status'  => $request->status,
+        ]);
+
 
         // image replacement
-        if ($request->filled('imageId') && $request->imageId > 0) {
+            if ($request->filled('imageId') && $request->imageId > 0) {
 
-            $oldImage = $project->image;
-            $tempImage = TempImage::find($request->imageId);
+                $oldImage = $project->image;
+                $tempImage = TempImage::find($request->imageId);
 
-            if ($tempImage) {
+                if ($tempImage) {
 
-                $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
-                $fileName = time() . '_' . $project->id . '.' . $ext;
-                $sourcePath = public_path('uploads/temp/' . $tempImage->name);
-
-                $manager = new ImageManager(Driver::class);
-
-                /** SMALL IMAGE */
-                $smallTmp = storage_path("app/tmp_small_$fileName");
-                $image = $manager->read($sourcePath);
-                $image->coverDown(640, 420)->save($smallTmp);
-
-                SupabaseStorageService::upload(
-                    "projects/small/$fileName",
-                    $smallTmp,
-                    mime_content_type($smallTmp)
-                );
-
-                /** LARGE IMAGE */
-                $largeTmp = storage_path("app/tmp_large_$fileName");
-                $image = $manager->read($sourcePath);
-                $image->scaleDown(1200)->save($largeTmp);
+                    $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+                    $fileName = time() . '_' . $project->id . '.' . $ext;
 
 
-                SupabaseStorageService::upload(
-                    "projects/large/$fileName",
-                    $largeTmp,
-                    mime_content_type($largeTmp)
-                );
+                    $sourcePath = public_path('uploads/temp/' . $tempImage->name);
 
-                // cleanup local temp
-                @unlink($smallTmp);
-                @unlink($largeTmp);
+                    if (file_exists($sourcePath)) {
 
-                // update db image
-                $project->image = $fileName;
-                $project->save();
+                        SupabaseStorageService::upload(
+                            "projects/small/{$fileName}",
+                            $largeTmpPath,
+                            mime_content_type($sourcePath)
+                        );
 
-                // delete old images AFTER successful update
-                if ($oldImage) {
-                    SupabaseStorageService::delete("projects/small/$oldImage");
-                    SupabaseStorageService::delete("projects/large/$oldImage");
+                        SupabaseStorageService::upload(
+                            "projects/large/{$fileName}",
+                            $largeTmpPath,
+                            mime_content_type($sourcePath)
+                        );
+
+                        $project->update(['image' =>  $fileName]);
+
+
+                    // delete old images AFTER successful update
+                    if ($oldImage) {
+                        SupabaseStorageService::delete("projects/small/$oldImage");
+                        SupabaseStorageService::delete("projects/large/$oldImage");
+                    }
                 }
             }
         }
-
         return response()->json([
             'status' => true,
             'message' => 'Project updated successfully.'
