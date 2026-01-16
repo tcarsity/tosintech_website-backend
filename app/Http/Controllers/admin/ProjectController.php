@@ -68,13 +68,13 @@ class ProjectController extends Controller
 
                     SupabaseStorageService::upload(
                         "projects/small/{$fileName}",
-                        $largeTmpPath,
+                        $sourcePath,
                         mime_content_type($sourcePath)
                     );
 
                     SupabaseStorageService::upload(
                         "projects/large/{$fileName}",
-                        $largeTmpPath,
+                        $sourcePath,
                         mime_content_type($sourcePath)
                     );
 
@@ -158,13 +158,13 @@ class ProjectController extends Controller
 
                         SupabaseStorageService::upload(
                             "projects/small/{$fileName}",
-                            $largeTmpPath,
+                            $sourcePath,
                             mime_content_type($sourcePath)
                         );
 
                         SupabaseStorageService::upload(
                             "projects/large/{$fileName}",
-                            $largeTmpPath,
+                            $sourcePath,
                             mime_content_type($sourcePath)
                         );
 
