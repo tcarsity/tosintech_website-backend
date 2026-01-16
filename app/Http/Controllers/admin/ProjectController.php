@@ -9,8 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\File;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Imagick\Driver;
+use Illuminate\Support\Facades\Log;
 
 
 class ProjectController extends Controller
@@ -30,6 +29,7 @@ class ProjectController extends Controller
     // This method will insert project in db
     public function store(Request $request)
     {
+        \Log::info('STORE REQUEST PAYLOAD', $request->all());
         // 1️⃣ Validate main fields
         $validator = Validator::make($request->all(), [
             'title'   => 'required',
