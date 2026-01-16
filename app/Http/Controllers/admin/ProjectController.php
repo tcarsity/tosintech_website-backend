@@ -51,7 +51,7 @@ class ProjectController extends Controller
             'status'  => $request->status,
         ]);
 
-        if ($request->filled('imageId') && $request->imageId > 0) {
+        if ($request->filled('imageId') && (int) $request->imageId > 0) {
 
             $tempImage = TempImage::find($request->imageId);
 
@@ -63,6 +63,14 @@ class ProjectController extends Controller
 
                 // source temp image
                 $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+
+                if(!file_exists($sourcePath)){
+                        return response()->json([
+                            'status' => false,
+                            'errors' => 'Temp image file not found'
+                        ], 422);
+                    }
+
 
                 if (file_exists($sourcePath)) {
 
@@ -141,7 +149,7 @@ class ProjectController extends Controller
 
 
         // image replacement
-            if ($request->filled('imageId') && $request->imageId > 0) {
+            if ($request->filled('imageId') && (int) $request->imageId > 0) {
 
                 $oldImage = $project->image;
                 $tempImage = TempImage::find($request->imageId);
@@ -153,6 +161,13 @@ class ProjectController extends Controller
 
 
                     $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+
+                    if(!file_exists($sourcePath)){
+                        return response()->json([
+                            'status' => false,
+                            'errors' => 'Temp image file not found'
+                        ], 422);
+                    }
 
                     if (file_exists($sourcePath)) {
 
