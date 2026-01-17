@@ -29,7 +29,7 @@ class ProjectController extends Controller
     // This method will insert project in db
     public function store(Request $request)
     {
-        \Log::info('STORE REQUEST PAYLOAD', $request->all());
+
         // 1️⃣ Validate main fields
         $validator = Validator::make($request->all(), [
             'title'   => 'required',
@@ -49,10 +49,9 @@ class ProjectController extends Controller
             'content' => $request->content,
             'site'  => $request->site,
             'status'  => $request->status,
-            'image' => $request->image,
         ]);
 
-        if ($request->filled('imageId')) {
+        if ($request->filled('imageId') && (int) $request->imageId > 0) {
 
             $tempImage = TempImage::find($request->imageId);
 
@@ -146,12 +145,11 @@ class ProjectController extends Controller
             'content' => $request->content,
             'site'  => $request->site,
             'status'  => $request->status,
-            'image' => $request->image,
         ]);
 
 
         // image replacement
-            if ($request->filled('imageId')) {
+            if ($request->filled('imageId') && (int) $request->imageId > 0) {
 
                 $oldImage = $project->image;
                 $tempImage = TempImage::find($request->imageId);
