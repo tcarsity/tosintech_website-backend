@@ -26,8 +26,8 @@ class TempImageController extends Controller
 
         $image = $request->file('image');
 
-        $extension = $image->getClientOriginalExtension();
-        $imageName = Str::uuid() . '.' . $extension;
+        $extension = $image->extension();
+        $imageName = Str::uuid()->toString() . '.' . $extension;
 
         $basePath = public_path('uploads/temp');
 

@@ -59,6 +59,19 @@ class ProjectController extends Controller
 
                 // filename
                 $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+                if(!$ext) {
+                    $mime = mime_content_type($sourcePath);
+
+                    $map = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png',
+                        'image/webp' => 'webp',
+                        'image/gif' => 'gif',
+                    ];
+
+                    $ext = $map[$mime] ?? 'jpg';
+                }
+
                 $fileName = time() . '_' . $project->id . '.' . $ext;
 
                 // source temp image
@@ -157,6 +170,20 @@ class ProjectController extends Controller
                 if ($tempImage) {
 
                     $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+
+                    if(!$ext) {
+                    $mime = mime_content_type($sourcePath);
+
+                    $map = [
+                        'image/jpeg' => 'jpg',
+                        'image/png' => 'png',
+                        'image/webp' => 'webp',
+                        'image/gif' => 'gif',
+                    ];
+
+                    $ext = $map[$mime] ?? 'jpg';
+                }
+
                     $fileName = time() . '_' . $project->id . '.' . $ext;
 
 
