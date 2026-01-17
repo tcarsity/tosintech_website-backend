@@ -10,8 +10,8 @@ class SupabaseStorageService
     protected static function headers()
     {
         return [
-            'Authorization' => 'Bearer ' . config('services.supabase.service_role_key'),
-            'apikey'        => config('services.supabase.service_role_key'),
+            'Authorization' => 'Bearer ' . config('services.supabase.service.role.key'),
+            'apikey'        => config('services.supabase.service.role.key'),
         ];
     }
 
