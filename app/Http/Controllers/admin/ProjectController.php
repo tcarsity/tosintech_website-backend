@@ -29,7 +29,6 @@ class ProjectController extends Controller
     // This method will insert project in db
     public function store(Request $request)
     {
-
         // 1️⃣ Validate main fields
         $validator = Validator::make($request->all(), [
             'title'   => 'required',
@@ -57,8 +56,19 @@ class ProjectController extends Controller
 
             if ($tempImage) {
 
+                // source temp image
+                $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+
+                if(!file_exists($sourcePath)){
+                    return response()->json([
+                        'status' => false,
+                        'errors' => 'Temp image file not found'
+                    ], 422);
+                }
+
                 // filename
                 $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
+
                 if(!$ext) {
                     $mime = mime_content_type($sourcePath);
 
@@ -74,19 +84,7 @@ class ProjectController extends Controller
 
                 $fileName = time() . '_' . $project->id . '.' . $ext;
 
-                // source temp image
-                $sourcePath = public_path('uploads/temp/' . $tempImage->name);
-
-                if(!file_exists($sourcePath)){
-                        return response()->json([
-                            'status' => false,
-                            'errors' => 'Temp image file not found'
-                        ], 422);
-                    }
-
-
-                if (file_exists($sourcePath)) {
-
+                try{
                     SupabaseStorageService::upload(
                         "projects/small/{$fileName}",
                         $sourcePath,
@@ -98,9 +96,15 @@ class ProjectController extends Controller
                         $sourcePath,
                         mime_content_type($sourcePath)
                     );
+                    }catch (\Throwable $e) {
+                        return response()->json([
+                            'status' => false,
+                            'errors' => 'image upload failed'
+                        ], 500);
+                    }
 
-                    $project->update(['image' =>  $fileName]);
-                }
+                $project->update(['image' =>  $fileName]);
+
             }
         }
 
@@ -169,6 +173,15 @@ class ProjectController extends Controller
 
                 if ($tempImage) {
 
+                    $sourcePath = public_path('uploads/temp/' . $tempImage->name);
+
+                    if(!file_exists($sourcePath)){
+                        return response()->json([
+                            'status' => false,
+                            'errors' => 'Temp image file not found'
+                        ], 422);
+                    }
+
                     $ext = pathinfo($tempImage->name, PATHINFO_EXTENSION);
 
                     if(!$ext) {
@@ -186,18 +199,7 @@ class ProjectController extends Controller
 
                     $fileName = time() . '_' . $project->id . '.' . $ext;
 
-
-                    $sourcePath = public_path('uploads/temp/' . $tempImage->name);
-
-                    if(!file_exists($sourcePath)){
-                        return response()->json([
-                            'status' => false,
-                            'errors' => 'Temp image file not found'
-                        ], 422);
-                    }
-
-                    if (file_exists($sourcePath)) {
-
+                    try{
                         SupabaseStorageService::upload(
                             "projects/small/{$fileName}",
                             $sourcePath,
@@ -209,6 +211,12 @@ class ProjectController extends Controller
                             $sourcePath,
                             mime_content_type($sourcePath)
                         );
+                    }catch (\Throwable $e) {
+                        return response()->json([
+                            'status' => false,
+                            'errors' => 'image upload failed'
+                        ], 500);
+                    }
 
                         $project->update(['image' =>  $fileName]);
 
@@ -218,7 +226,6 @@ class ProjectController extends Controller
                         SupabaseStorageService::delete("projects/small/$oldImage");
                         SupabaseStorageService::delete("projects/large/$oldImage");
                     }
-                }
             }
         }
         return response()->json([
