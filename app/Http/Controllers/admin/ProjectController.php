@@ -49,9 +49,10 @@ class ProjectController extends Controller
             'content' => $request->content,
             'site'  => $request->site,
             'status'  => $request->status,
+            'image' => $request->image,
         ]);
 
-        if ($request->filled('imageId') && (int) $request->imageId > 0) {
+        if ($request->filled('imageId')) {
 
             $tempImage = TempImage::find($request->imageId);
 
@@ -145,11 +146,12 @@ class ProjectController extends Controller
             'content' => $request->content,
             'site'  => $request->site,
             'status'  => $request->status,
+            'image' => $request->image,
         ]);
 
 
         // image replacement
-            if ($request->filled('imageId') && (int) $request->imageId > 0) {
+            if ($request->filled('imageId')) {
 
                 $oldImage = $project->image;
                 $tempImage = TempImage::find($request->imageId);
