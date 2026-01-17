@@ -35,13 +35,12 @@ class TempImageController extends Controller
             mkdir($basePath, 0755, true);
         }
 
-        // Save DB record
+        $image->move($basePath, $imageName);
+
         $tempImage = TempImage::create([
             'name' => $imageName,
         ]);
 
-        // Move original
-        $image->move($basePath, $imageName);
 
         return response()->json([
             'status' => true,
