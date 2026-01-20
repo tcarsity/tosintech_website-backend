@@ -29,7 +29,8 @@ class SupabaseStorageService
 
         $url = rtrim(config('services.supabase.url'), '/') .
             '/storage/v1/object/' .
-            config('services.supabase.bucket') . '/' . $path;
+            config('services.supabase.bucket') . '/' . $path .
+            '?upsert=true';
 
         $response = Http::withHeaders(array_merge(self::headers(), [
                 'Content-Type' => $mime,
