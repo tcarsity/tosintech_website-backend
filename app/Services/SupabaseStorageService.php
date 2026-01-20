@@ -24,7 +24,7 @@ class SupabaseStorageService
      public static function upload(string $path, string $filePath, string $mime): void
     {
         if (!file_exists($filePath)) {
-            throw new \Exception("File does not exist: {$filePath}");
+            throw new \Exception("File not found: {$filePath}");
         }
 
         $url = rtrim(config('services.supabase.url'), '/') .
@@ -32,16 +32,15 @@ class SupabaseStorageService
             config('services.supabase.bucket') . '/' . $path .
             '?upsert=true';
 
-        $response = Http::withHeaders(array_merge(self::headers(), [
-                'Content-Type' => $mime,
-            ]))
-            ->put($url, file_get_contents($filePath));
+        $headers = array_merge(
+            self::headers(),
+            ['Content-Type' => $mime]
+        );
 
-        Log::info('SUPABASE UPLOAD RESPONSE', [
-            'url'    => $url,
-            'status' => $response->status(),
-            'body'   => $response->body(),
-        ]);
+        $response = Http::withHeaders($headers)
+            ->send('PUT', $url, [
+                'body' => fopen($filePath, 'r'),
+            ]);
 
         if (! $response->successful()) {
             throw new \Exception(
