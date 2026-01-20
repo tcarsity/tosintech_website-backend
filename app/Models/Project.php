@@ -11,6 +11,7 @@ class Project extends Model
         'title',
         'content',
         'site',
-        'status'
+        'status',
+        'image',
     ];
 }
