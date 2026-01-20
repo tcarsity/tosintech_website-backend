@@ -105,6 +105,13 @@ class ProjectController extends Controller
 
                 $project->update(['image' =>  $fileName]);
 
+                $tempPath = public_path('uploads/temp/' . $tempImage->name);
+
+                if(file_exists($tempPath)) {
+                    @unlink($tempPath);
+                }
+
+                $tempImage->delete();
             }
         }
 
@@ -245,8 +252,10 @@ class ProjectController extends Controller
             ], 404);
         }
 
-            SupabaseStorageService::delete("projects/large");
-            SupabaseStorageService::delete("projects/small");
+        if($project->image){
+            SupabaseStorageService::delete("projects/small/{$project->image}");
+            SupabaseStorageService::delete("projects/large/{$project->image}");
+        }
 
             $project->delete();
 
